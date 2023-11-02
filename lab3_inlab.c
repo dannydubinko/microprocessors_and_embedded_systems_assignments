@@ -221,32 +221,13 @@ void interrupt_handler(void)
 	
 		// alternate the hex display
 		temp = SEVEN_SEGMENT_DISPLAY;
-		for(int i = 0; i < 7; i++){
-			*SEVEN_SEGMENT_DISPLAY = *SEVEN_SEGMENT_DISPLAY ^ 0b1;
-			temp += 1;
-		}
-		
-		temp += 17;
-		
-		for(int i = 0; i < 7; i++){
-			*SEVEN_SEGMENT_DISPLAY = *SEVEN_SEGMENT_DISPLAY ^ 0b1;
-			temp += 1;
-		}
+		*temp = *temp ^ 0x7F00007F;
 	}
 	
 	if((ipending & 0x4000) == 0x4000) { // timer 1
 		*TIMER1_STATUS = *TIMER1_STATUS & 0b10;
 		temp = LEDS;
-
-		for(int i = 0; i < 2; i++){
-			*LEDS = *LEDS ^ 0b1;
-			temp += 1;
-		}
-		temp += 0x4;
-		for(int i = 0; i < 2; i++){
-			*LEDS = *LEDS ^ 0b1;
-			temp += 1;
-		}
+		*temp = *temp ^ 0x707;
 	}
 	
 	if((ipending & 0x8000) == 0x8000) { // timer 2
