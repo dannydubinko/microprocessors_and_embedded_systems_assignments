@@ -156,6 +156,9 @@
 #define TIMER2_SNAP_HI	((volatile unsigned int *) 0x10004044)
 
 
+#define JTAG_UART_BASE ((volatile unsigned int *) 0x10001000)
+
+
 /* define a bit pattern reflecting the position of the timeout (TO) bit
    in the timer status register */
 
@@ -214,6 +217,31 @@ void interrupt_handler(void)
 		
 		
 	}
+	
+	if((ipending & 0x2000) == 0x2000) { // timer 0
+		// alternate the hex display
+	}
+	
+	if((ipending & 0x4000) == 0x4000) { // timer 1
+		
+		for(int i = 0; i < 2; i++){
+			*LEDS = *LEDS ^ 0b1;
+			LEDS += 1;
+		}
+		LEDS += 0x4;
+		for(int i = 0; i < 2; i++){
+			*LEDS = *LEDS ^ 0b1;
+			LEDS += 1;
+		}
+		LEDS -= 0xA;
+	}
+	
+	if((ipending & 0x8000) == 0x8000) {
+		*JTAG_UART_BASE = 0x21;
+	}
+	
+
+	
 }
 
 void Init (void)
@@ -251,6 +279,11 @@ void Init (void)
 int main (void)
 {
 	Init ();	/* perform software/hardware initialization */
+	for(int i = 0; i < 2; i++){
+			*LEDS = *LEDS ^ 0b1;
+			LEDS += 1;
+	}
+	LEDS -= 3;
 
 	while (1)
 	{
