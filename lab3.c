@@ -148,7 +148,10 @@
 /*-----------------------------------------------------------------*/
 
 /* place additional #define macros here */
-
+#define BUTTON (volatile unsigned int *) 0x10000050
+#define BUTTON_MASK (volatile unsigned int *) 0x10000058
+#define BUTTON_EDGE (volatile unsigned int *) 0x1000005C
+#define HEX_DISPLAY (volatile unsigned int *) 0x10000020
 
 /* define global program variables here */
 
@@ -159,17 +162,36 @@ void interrupt_handler(void)
 
 
 	/* read current value in ipending register */
+	ipending = NIOS2_READ_IPENDING();
 
 	/* do one or more checks for different sources using ipending value */
+	if ((ipending & 0b1) == 0b1) {
+		*TIMER_STATUS = *TIMER_STATUS & 0b10;
+		*LEDS = *LEDS ^ 0b1;
+		
+		
+	}
+	
+
 
         /* remember to clear interrupt sources */
+	if((ipending & 0b10) == 0b10) {
+		unsigned int pressed = *BUTTON_EDGE;
+		*BUTTON_EDGE = pressed;
+		*HEX_DISPLAY = *HEX_DISPLAY ^ (unsigned int)-1;
+	}
 }
 
 void Init (void)
 {
 	/* initialize software variables */
+	*TIMER_START_LO = 0x7840;
+	*TIMER_START_HI = 0x017D;
+	*TIMER_STATUS = 0b0;
+	*TIMER_CONTROL = 0x7;
 
 	/* set up each hardware interface */
+	*
 
 	/* set up ienable */
 
