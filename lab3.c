@@ -191,11 +191,12 @@ void Init (void)
 	*TIMER_CONTROL = 0x7;
 
 	/* set up each hardware interface */
-	*
+	*BUTTON_MASK = 0b110;
 
 	/* set up ienable */
-
+	NIOS2_WRITE_STATUS(0b1);
 	/* enable global recognition of interrupts in procr. status reg. */
+	NIOS2_WRITE_IENABLE(0b11);
 }
 
 
