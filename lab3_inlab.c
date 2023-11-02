@@ -156,7 +156,7 @@
 #define TIMER2_SNAP_HI	((volatile unsigned int *) 0x10004044)
 
 
-#define JTAG_UART_BASE ((volatile unsigned int *) 0x10001000)
+
 
 
 /* define a bit pattern reflecting the position of the timeout (TO) bit
@@ -193,7 +193,8 @@
 /*-----------------------------------------------------------------*/
 
 /* place additional #define macros here */
-
+#define JTAG_UART_BASE ((volatile unsigned int *) 0x10001000)
+#define SEVEN_SEGMENT_DISPLAY ((volatile unsigned int *) 0x10000020)
 
 /* define global program variables here */
 
@@ -209,34 +210,47 @@ void interrupt_handler(void)
 	/* do one or more checks for different sources using ipending value */
 	if ((ipending & 0b1) == 0b1) {
 		*TIMER_STATUS = *TIMER_STATUS & 0b10;
-		*TIMER0_STATUS = *TIMER0_STATUS & 0b10;
-		*TIMER1_STATUS = *TIMER1_STATUS & 0b10;
-		*TIMER2_STATUS = *TIMER2_STATUS & 0b10;
 		
-		*LEDS = *LEDS ^ 0b1;
+		//*LEDS = *LEDS ^ 0b1;
 		
 		
 	}
 	
 	if((ipending & 0x2000) == 0x2000) { // timer 0
+	*TIMER0_STATUS = *TIMER0_STATUS & 0b10;
+	
 		// alternate the hex display
+		temp = SEVEN_SEGMENT_DISPLAY;
+		for(int i = 0; i < 7; i++){
+			*SEVEN_SEGMENT_DISPLAY = *SEVEN_SEGMENT_DISPLAY ^ 0b1;
+			temp += 1;
+		}
+		
+		temp += 17;
+		
+		for(int i = 0; i < 7; i++){
+			*SEVEN_SEGMENT_DISPLAY = *SEVEN_SEGMENT_DISPLAY ^ 0b1;
+			temp += 1;
+		}
 	}
 	
 	if((ipending & 0x4000) == 0x4000) { // timer 1
-		
+		*TIMER1_STATUS = *TIMER1_STATUS & 0b10;
+		temp = LEDS;
+
 		for(int i = 0; i < 2; i++){
 			*LEDS = *LEDS ^ 0b1;
-			LEDS += 1;
+			temp += 1;
 		}
-		LEDS += 0x4;
+		temp += 0x4;
 		for(int i = 0; i < 2; i++){
 			*LEDS = *LEDS ^ 0b1;
-			LEDS += 1;
+			temp += 1;
 		}
-		LEDS -= 0xA;
 	}
 	
-	if((ipending & 0x8000) == 0x8000) {
+	if((ipending & 0x8000) == 0x8000) { // timer 2
+		*TIMER2_STATUS = *TIMER2_STATUS & 0b10;
 		*JTAG_UART_BASE = 0x21;
 	}
 	
@@ -279,11 +293,8 @@ void Init (void)
 int main (void)
 {
 	Init ();	/* perform software/hardware initialization */
-	for(int i = 0; i < 2; i++){
-			*LEDS = *LEDS ^ 0b1;
-			LEDS += 1;
-	}
-	LEDS -= 3;
+	*LEDS = 0b111;
+	*SEVEN_SEGMENT_DISPLAY = 0b1111111;
 
 	while (1)
 	{
