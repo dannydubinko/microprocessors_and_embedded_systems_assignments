@@ -137,9 +137,9 @@
 
 #define TIMER1_START_HI	((volatile unsigned int *) 0x1000402C)
 
-#define TIMER1_SNAP_LO	((volatile unsigned int *) 0x10004020)
+#define TIMER1_SNAP_LO	((volatile unsigned int *) 0x10004030)
 
-#define TIMER1_SNAP_HI	((volatile unsigned int *) 0x10004024)
+#define TIMER1_SNAP_HI	((volatile unsigned int *) 0x10004034)
 
 // timer2
 
@@ -151,9 +151,9 @@
 
 #define TIMER2_START_HI	((volatile unsigned int *) 0x1000404C)
 
-#define TIMER2_SNAP_LO	((volatile unsigned int *) 0x10004040)
+#define TIMER2_SNAP_LO	((volatile unsigned int *) 0x10004050)
 
-#define TIMER2_SNAP_HI	((volatile unsigned int *) 0x10004044)
+#define TIMER2_SNAP_HI	((volatile unsigned int *) 0x10004054)
 
 
 
@@ -196,9 +196,9 @@
 #define JTAG_UART_BASE ((volatile unsigned int *) 0x10001000)
 #define SEVEN_SEGMENT_DISPLAY ((volatile unsigned int *) 0x10000020)
 
-#define BUTTON (volatile unsigned int *) 0x10000050
-#define BUTTON_MASK (volatile unsigned int *) 0x10000058
-#define BUTTON_EDGE (volatile unsigned int *) 0x1000005C
+#define SWITCH (volatile unsigned int *) 0x10000040
+
+
 #define HEX_DISPLAY (volatile unsigned int *) 0x10000020
 
 /* define global program variables here */
@@ -221,8 +221,8 @@ void interrupt_handler(void)
 		
 	}
 	
-	if((ipending & 0x2000) == 0x2000) { // timer 0
-	*TIMER0_STATUS = *TIMER0_STATUS & 0b10;
+	if((ipending & 0x2000) == 0x2000 && *SWITCH == 1) { // timer 0
+	//*TIMER0_STATUS = *TIMER0_STATUS & 0b10;
 	
 		// alternate the hex display
 		volatile unsigned int* temp = SEVEN_SEGMENT_DISPLAY;
@@ -230,15 +230,15 @@ void interrupt_handler(void)
 		*TIMER0_STATUS = 0;
 	}
 	
-	if((ipending & 0x4000) == 0x4000) { // timer 1
-		*TIMER1_STATUS = *TIMER1_STATUS & 0b10;
+	if((ipending & 0x4000) == 0x4000 && *(SWITCH+1) == 1) { // timer 1
+		//*TIMER1_STATUS = *TIMER1_STATUS & 0b10;
 		volatile unsigned int* temp = LEDS;
-		*temp = *temp ^ 0x707;
+		*temp = *temp ^ 0x387;
 		*TIMER1_STATUS = 0;
 	}
 	
-	if((ipending & 0x8000) == 0x8000) { // timer 2
-		*TIMER2_STATUS = *TIMER2_STATUS & 0b10;
+	if((ipending & 0x8000) == 0x8000 && *(SWITCH+2) == 1) { // timer 2
+		//*TIMER2_STATUS = *TIMER2_STATUS & 0b10;
 		*JTAG_UART_BASE = 0x21;
 		*TIMER2_STATUS = 0;
 	}
@@ -273,12 +273,12 @@ void Init (void)
 	/* initialize software variables */
 
 	/* set up each hardware interface */
-	*BUTTON_MASK = 0b110;
+	//*BUTTON_MASK = 0b110;
 
 	/* set up ienable */
 	NIOS2_WRITE_STATUS(0b1);
 	/* enable global recognition of interrupts in procr. status reg. */
-	NIOS2_WRITE_IENABLE(0b11);
+	NIOS2_WRITE_IENABLE(0b1110000000000000);
 }
 
 
