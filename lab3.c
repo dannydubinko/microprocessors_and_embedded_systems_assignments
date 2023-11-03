@@ -196,10 +196,10 @@
 #define JTAG_UART_BASE ((volatile unsigned int *) 0x10001000)
 #define SEVEN_SEGMENT_DISPLAY ((volatile unsigned int *) 0x10000020)
 
-#define SWITCH (volatile unsigned int *) 0x10000040
+#define SWITCH ((volatile unsigned int *) 0x10000040)
 
 
-#define HEX_DISPLAY (volatile unsigned int *) 0x10000020
+#define HEX_DISPLAY ((volatile unsigned int *) 0x10000020)
 
 /* define global program variables here */
 
@@ -212,35 +212,36 @@ void interrupt_handler(void)
 	/* read current value in ipending register */
 	ipending = NIOS2_READ_IPENDING();
 
-	/* do one or more checks for different sources using ipending value */
-	if ((ipending & 0b1) == 0b1) {
-		*TIMER_STATUS = *TIMER_STATUS & 0b10;
-		
-		//*LEDS = *LEDS ^ 0b1;
-		
-		
-	}
 	
-	if((ipending & 0x2000) == 0x2000 && *SWITCH == 1) { // timer 0
+	if((ipending & 0x2000) == 0x2000) { // timer 0
 	//*TIMER0_STATUS = *TIMER0_STATUS & 0b10;
-	
-		// alternate the hex display
-		volatile unsigned int* temp = SEVEN_SEGMENT_DISPLAY;
-		*temp = *temp ^ 0x7F00007F;
 		*TIMER0_STATUS = 0;
+		if(*SWITCH & 0b1){
+		// alternate the hex display
+			volatile unsigned int* temp = SEVEN_SEGMENT_DISPLAY;
+			*temp = *temp ^ 0x7F00007F;
+		}
+
 	}
 	
-	if((ipending & 0x4000) == 0x4000 && *(SWITCH+1) == 1) { // timer 1
+	if((ipending & 0x4000) == 0x4000) { // timer 1
 		//*TIMER1_STATUS = *TIMER1_STATUS & 0b10;
-		volatile unsigned int* temp = LEDS;
-		*temp = *temp ^ 0x387;
 		*TIMER1_STATUS = 0;
+		
+		if(*SWITCH & 0b10){
+			volatile unsigned int* temp = LEDS;
+			*temp = *temp ^ 0x387;
+		}
+		
 	}
 	
-	if((ipending & 0x8000) == 0x8000 && *(SWITCH+2) == 1) { // timer 2
+	if((ipending & 0x8000) == 0x8000) { // timer 2
 		//*TIMER2_STATUS = *TIMER2_STATUS & 0b10;
-		*JTAG_UART_BASE = 0x21;
+		
 		*TIMER2_STATUS = 0;
+		if(*SWITCH & 0b100){
+			*JTAG_UART_BASE = 0x21;
+		}
 	}
 	
 	//if((ipending & 0x2) == 0x2) {
@@ -275,10 +276,12 @@ void Init (void)
 	/* set up each hardware interface */
 	//*BUTTON_MASK = 0b110;
 
-	/* set up ienable */
-	NIOS2_WRITE_STATUS(0b1);
+
 	/* enable global recognition of interrupts in procr. status reg. */
-	NIOS2_WRITE_IENABLE(0b1110000000000000);
+	NIOS2_WRITE_IENABLE(0xE000);
+	
+		/* set up ienable */
+	NIOS2_WRITE_STATUS(0b1);
 }
 
 
