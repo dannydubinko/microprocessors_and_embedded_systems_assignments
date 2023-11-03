@@ -113,6 +113,51 @@
 
 #define TIMER_SNAP_HI	((volatile unsigned int *) 0x10002014)
 
+// timer0
+
+#define TIMER0_STATUS	((volatile unsigned int *) 0x10004000)
+
+#define TIMER0_CONTROL	((volatile unsigned int *) 0x10004004)
+
+#define TIMER0_START_LO	((volatile unsigned int *) 0x10004008)
+
+#define TIMER0_START_HI	((volatile unsigned int *) 0x1000400C)
+
+#define TIMER0_SNAP_LO	((volatile unsigned int *) 0x10004010)
+
+#define TIMER0_SNAP_HI	((volatile unsigned int *) 0x10004014)
+
+// timer1
+
+#define TIMER1_STATUS	((volatile unsigned int *) 0x10004020)
+
+#define TIMER1_CONTROL	((volatile unsigned int *) 0x10004024)
+
+#define TIMER1_START_LO	((volatile unsigned int *) 0x10004028)
+
+#define TIMER1_START_HI	((volatile unsigned int *) 0x1000402C)
+
+#define TIMER1_SNAP_LO	((volatile unsigned int *) 0x10004020)
+
+#define TIMER1_SNAP_HI	((volatile unsigned int *) 0x10004024)
+
+// timer2
+
+#define TIMER2_STATUS	((volatile unsigned int *) 0x10004040)
+
+#define TIMER2_CONTROL	((volatile unsigned int *) 0x10004044)
+
+#define TIMER2_START_LO	((volatile unsigned int *) 0x10004048)
+
+#define TIMER2_START_HI	((volatile unsigned int *) 0x1000404C)
+
+#define TIMER2_SNAP_LO	((volatile unsigned int *) 0x10004040)
+
+#define TIMER2_SNAP_HI	((volatile unsigned int *) 0x10004044)
+
+
+
+
 
 /* define a bit pattern reflecting the position of the timeout (TO) bit
    in the timer status register */
@@ -148,6 +193,9 @@
 /*-----------------------------------------------------------------*/
 
 /* place additional #define macros here */
+#define JTAG_UART_BASE ((volatile unsigned int *) 0x10001000)
+#define SEVEN_SEGMENT_DISPLAY ((volatile unsigned int *) 0x10000020)
+
 #define BUTTON (volatile unsigned int *) 0x10000050
 #define BUTTON_MASK (volatile unsigned int *) 0x10000058
 #define BUTTON_EDGE (volatile unsigned int *) 0x1000005C
@@ -167,28 +215,62 @@ void interrupt_handler(void)
 	/* do one or more checks for different sources using ipending value */
 	if ((ipending & 0b1) == 0b1) {
 		*TIMER_STATUS = *TIMER_STATUS & 0b10;
-		*LEDS = *LEDS ^ 0b1;
+		
+		//*LEDS = *LEDS ^ 0b1;
 		
 		
 	}
 	
-
-
-        /* remember to clear interrupt sources */
-	if((ipending & 0b10) == 0b10) {
-		unsigned int pressed = *BUTTON_EDGE;
-		*BUTTON_EDGE = pressed;
-		*HEX_DISPLAY = *HEX_DISPLAY ^ (unsigned int)-1;
+	if((ipending & 0x2000) == 0x2000) { // timer 0
+	*TIMER0_STATUS = *TIMER0_STATUS & 0b10;
+	
+		// alternate the hex display
+		volatile unsigned int* temp = SEVEN_SEGMENT_DISPLAY;
+		*temp = *temp ^ 0x7F00007F;
+		*TIMER0_STATUS = 0;
 	}
+	
+	if((ipending & 0x4000) == 0x4000) { // timer 1
+		*TIMER1_STATUS = *TIMER1_STATUS & 0b10;
+		volatile unsigned int* temp = LEDS;
+		*temp = *temp ^ 0x707;
+		*TIMER1_STATUS = 0;
+	}
+	
+	if((ipending & 0x8000) == 0x8000) { // timer 2
+		*TIMER2_STATUS = *TIMER2_STATUS & 0b10;
+		*JTAG_UART_BASE = 0x21;
+		*TIMER2_STATUS = 0;
+	}
+	
+	//if((ipending & 0x2) == 0x2) {
+	//	unsigned int pressed = *BUTTON_EDGE;
+	//	*BUTTON_EDGE = pressed;
+	//	*HEX_DISPLAY = *HEX_DISPLAY ^ (unsigned int)-1;
+	//}
+
+	
 }
 
 void Init (void)
 {
+	
+	*TIMER1_START_LO = 0x7840;
+	*TIMER1_START_HI = 0x017D;
+	*TIMER1_STATUS = 0b0;
+	*TIMER1_CONTROL = 0x7;
+
+	*TIMER2_START_LO = 0xF080;
+	*TIMER2_START_HI = 0x02FA;
+	*TIMER2_STATUS = 0b0;
+	*TIMER2_CONTROL = 0x7;
+	
+	*TIMER0_START_LO = 0xBC20;
+	*TIMER0_START_HI = 0x00BE;
+	*TIMER0_STATUS = 0b0;
+	*TIMER0_CONTROL = 0x7;
+	
 	/* initialize software variables */
-	*TIMER_START_LO = 0x7840;
-	*TIMER_START_HI = 0x017D;
-	*TIMER_STATUS = 0b0;
-	*TIMER_CONTROL = 0x7;
 
 	/* set up each hardware interface */
 	*BUTTON_MASK = 0b110;
@@ -206,6 +288,8 @@ void Init (void)
 int main (void)
 {
 	Init ();	/* perform software/hardware initialization */
+	*LEDS = 0b111;
+	*SEVEN_SEGMENT_DISPLAY = 0b1111111;
 
 	while (1)
 	{
