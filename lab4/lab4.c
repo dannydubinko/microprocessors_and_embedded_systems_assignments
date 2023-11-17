@@ -5,6 +5,34 @@
 #define JTAG_UART_BASE ((volatile unsigned int *) 0x10001000)
 #define LEDS	((volatile unsigned int *) 0x10000010)
 
+// timer1
+
+#define TIMER1_STATUS	((volatile unsigned int *) 0x10004020)
+
+#define TIMER1_CONTROL	((volatile unsigned int *) 0x10004024)
+
+#define TIMER1_START_LO	((volatile unsigned int *) 0x10004028)
+
+#define TIMER1_START_HI	((volatile unsigned int *) 0x1000402C)
+
+#define TIMER1_SNAP_LO	((volatile unsigned int *) 0x10004030)
+
+#define TIMER1_SNAP_HI	((volatile unsigned int *) 0x10004034)
+
+// timer3
+
+#define TIMER2_STATUS	((volatile unsigned int *) 0x10004060)
+
+#define TIMER2_CONTROL	((volatile unsigned int *) 0x10004064)
+
+#define TIMER2_START_LO	((volatile unsigned int *) 0x10004068)
+
+#define TIMER2_START_HI	((volatile unsigned int *) 0x1000406C)
+
+#define TIMER2_SNAP_LO	((volatile unsigned int *) 0x10004070)
+
+#define TIMER2_SNAP_HI	((volatile unsigned int *) 0x10004074)
+
 /* define global program variables here */
 int timer_3_flag = 0;
 int timer_1_flag = 0;
