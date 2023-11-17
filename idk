@@ -85,6 +85,32 @@
 #define HEX_DISPLAY (volatile unsigned int *) 0x10000020
 
 /* define global program variables here */
+void PrintChar(int input){
+	unsigned int status;
+	
+	// polling loop - check if the UART is ready
+	do {
+		status = *JTAG_UART_STATUS;
+		status = (status & 0xFFFF0000);
+		//ShowDigit(3, status);
+	} while (status == 0);
+	
+	// write character to UART
+	*JTAG_UART_DATA = input;
+}
+
+// This function will print a string to the UART given a pointer to a starting address
+void PrintString(char *str){
+	char character;
+	
+	while(*str != '\0'){
+        character = *str; // read the current character
+        PrintChar(character);
+        str = str + 1;
+   
+	}
+}
+	
 unsigned int GetChar(){
     unsigned int st, data;
     // polling loop
@@ -223,6 +249,10 @@ int main (void)
 	if(input == 'r' || input == 'R'){
 		rightmost = 1;
 	}
+	
+	PrintString("\n\nELEC 371 Lab 4 by Alistair, Daniel, Matt");
+	PrintString("\n\nfour lowest switches: 0x?");
+	
 
 	while (1)
 	{
